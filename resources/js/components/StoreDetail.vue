@@ -6,41 +6,11 @@
       <template v-slot:lead>{{store.address}}</template>
 
       <hr class="my-4" />
-      <b-button variant="primary" v-b-modal.modal-1>Frutas</b-button>
-      <b-button variant="primary" v-b-modal.modal-2>Clientes</b-button>
       <b-button variant="primary" v-b-modal.modal-3>Vendedores</b-button>
-      <b-button variant="primary" v-b-modal.modal-4>Ventas</b-button>
     </b-jumbotron>
     <div>
       <b-tabs content-class="mt-3" class="m-3">
-        <b-tab title="Bodega" active>
-          <h3 class="text-center">Bodega</h3>
-          <b-button class="mb-5 ml-5" variant="primary" @click="openSaveCellar()">Agregar</b-button>
-          <b-row align-h="center" class="mx-5">
-            <b-table
-              striped
-              hover
-              :fields="fieldsCellar"
-              :items="cellar"
-              :per-page="perPage"
-              :current-page="currentPage"
-            >
-              <template v-slot:cell(#)="data">{{ data.index + 1 }}</template>
-              <template v-slot:cell(Fruta)="data">{{data.item.fruit.name}}</template>
-              <template v-slot:cell(priceton)="data">{{data.item.price_ton}}</template>
-              <template v-slot:cell(Primera)="data">${{data.item.first}}</template>
-              <template v-slot:cell(Segunda)="data">${{data.item.second}}</template>
-              <template v-slot:cell(Activo)="data">
-                <span v-if="data.item.active == 1">Disponible</span>
-                <span v-else>Terminado</span>
-              </template>
-              <template v-slot:cell(Editar)="data">
-                <b-button variant="primary" @click="openEditCellar(data.item.id)">Editar</b-button>
-              </template>
-            </b-table>
-          </b-row>
-        </b-tab>
-        <b-tab title="Ventas">
+        <b-tab title="Ventas" active>
           <h3 class="text-center">Ventas</h3>
           <b-button class="mb-5 ml-5" variant="primary" @click="saveDaySale()">Iniciar venta del día</b-button>
           <b-row align-h="center" class="mx-5">
@@ -67,8 +37,89 @@
             </b-table>
           </b-row>
         </b-tab>
+        <b-tab title="Bodega">
+          <h3 class="text-center">Bodega</h3>
+          <b-button class="mb-5 ml-5" variant="primary" @click="openSaveCellar()">Agregar</b-button>
+          <b-row align-h="center" class="mx-5">
+            <b-table
+              striped
+              hover
+              :fields="fieldsCellar"
+              :items="cellar"
+              :per-page="perPage"
+              :current-page="currentPage"
+            >
+              <template v-slot:cell(#)="data">{{ data.index + 1 }}</template>
+              <template v-slot:cell(Fruta)="data">{{data.item.fruit.name}}</template>
+              <template v-slot:cell(priceton)="data">{{data.item.price_ton}}</template>
+              <template v-slot:cell(Primera)="data">${{data.item.first}}</template>
+              <template v-slot:cell(Segunda)="data">${{data.item.second}}</template>
+              <template v-slot:cell(Activo)="data">
+                <span v-if="data.item.active == 1">Disponible</span>
+                <span v-else>Terminado</span>
+              </template>
+              <template v-slot:cell(Editar)="data">
+                <b-button variant="primary" @click="openEditCellar(data.item.id)">Editar</b-button>
+              </template>
+            </b-table>
+          </b-row>
+        </b-tab>
         <b-tab title="Frutas">
-          <p>Frutas</p>
+          <h3 class="text-center">Frutas</h3>
+          <b-button class="mb-5 ml-5" variant="primary" @click="openSaveFruit()">Agregar</b-button>
+          <b-row align-h="center" class="mx-5">
+            <b-table
+              striped
+              hover
+              :fields="fields"
+              :items="fruitSlt"
+              :per-page="perPage"
+              :current-page="currentPage"
+            >
+              <template v-slot:cell(#)="data">{{ data.index + 1 }}</template>
+              <template v-slot:cell(Editar)="data">
+                <b-button variant="primary" @click="openEditFruit(data.item.id)">Editar</b-button>
+              </template>
+            </b-table>
+            </b-row>
+        </b-tab>
+        <b-tab title="Clientes">
+          <h3 class="text-center">Clientes</h3>
+          <b-button class="mb-5 ml-5" variant="primary" @click="openSaveCustomer()">Agregar</b-button>
+          <b-row align-h="center" class="mx-5">
+            <b-table
+              striped
+              hover
+              :fields="fieldsCustomer"
+              :items="customerSlt"
+              :per-page="perPage"
+              :current-page="currentPage"
+            >
+              <template v-slot:cell(#)="data">{{ data.index + 1 }}</template>
+              <template v-slot:cell(Editar)="data">
+                <b-button variant="primary" @click="openEditCustomer(data.item.id)">Editar</b-button>
+              </template>
+            </b-table>
+            </b-row>
+        </b-tab>
+        <b-tab title="Vendedores">
+          <h3 class="text-center">Vendedores</h3>
+          <b-button class="mb-5 ml-5" variant="primary" @click="openSaveSeller()">Agregar</b-button>
+          <b-row align-h="center" class="mx-5">
+            <b-table
+              striped
+              hover
+              :fields="fieldsSeller"
+              :items="sellerSlt"
+              :per-page="perPage"
+              :current-page="currentPage"
+            >
+              <template v-slot:cell(#)="data">{{ data.index + 1 }}</template>
+              <template v-slot:cell(Editar)="data">
+                <b-button variant="primary" @click="openEditSeller(data.item.id)">Editar</b-button>
+              </template>
+            </b-table>
+            </b-row>
         </b-tab>
       </b-tabs>
     </div>
@@ -165,6 +216,18 @@
               ></b-form-input>
             </b-col>
           </b-row>
+          <b-row  v-if="btnCellar == 'Actualizar'" class="my-3">
+            <b-col sm="4">
+              <div class="mt-3">Estatus:</div>
+            </b-col>
+            <b-col sm="8">
+              <b-form-select v-model="formCellar.active" class="mb-3" required>
+                <b-form-select-option :value="null">Por favor selecciona un opción</b-form-select-option>
+                <b-form-select-option value="1">Activo</b-form-select-option>
+                <b-form-select-option value="2">Inactivo</b-form-select-option>
+              </b-form-select>
+            </b-col>
+          </b-row>
           <b-row align-h="end">
             <b-col cols="2">
               <b-button type="submit" variant="primary">{{btnCellar}}</b-button>
@@ -173,12 +236,13 @@
         </b-form>
       </b-container>
     </b-modal>
+
+
     <b-modal
       id="modal-1"
       ref="modal-1"
-      title="Nueva fruta"
+      title="Fruta"
       size="lg"
-      @hidden="clearFruitFields"
       hide-footer
     >
       <b-container fluid>
@@ -211,65 +275,9 @@
             </b-col>
           </b-row>
 
-          <b-button type="submit" variant="primary">Guardar</b-button>
+          <b-button type="submit" variant="primary">{{btnFruit}}</b-button>
         </b-form>
         <br />
-        <b-row align-h="center" class="mx-5">
-          <b-table
-            striped
-            hover
-            :fields="fields"
-            :items="fruitSlt"
-            :per-page="perPage"
-            :current-page="currentPage"
-          >
-            <template v-slot:cell(#)="data">{{ data.index + 1 }}</template>
-            <template v-slot:cell(Editar)="data">
-              <b-button variant="primary" @click="openEditFruit(data.item.id)">Editar</b-button>
-            </template>
-          </b-table>
-        </b-row>
-      </b-container>
-    </b-modal>
-
-    <b-modal
-      id="modal-edit-fruit"
-      ref="modal-edit-fruit"
-      title="Editar fruta"
-      size="lg"
-      hide-footer
-    >
-      <b-container fluid>
-        <b-form @submit="updateFruit">
-          <b-row class="my-3">
-            <b-col sm="12">
-              <b-form-input
-                id="fruit-name"
-                v-model="formFruit.name"
-                type="text"
-                aria-describedby="input-live-help input-live-feedback"
-                placeholder="Ingrese el nombre de la fruta"
-                trim
-                required
-              ></b-form-input>
-            </b-col>
-          </b-row>
-
-          <b-row class="my-3">
-            <b-col sm="12">
-              <b-form-input
-                id="fruit-description"
-                v-model.lazy="formFruit.description"
-                type="text"
-                aria-describedby="input-live-help input-live-feedback"
-                placeholder="Ingrese la descripción de la fruta"
-                trim
-                required
-              ></b-form-input>
-            </b-col>
-          </b-row>
-          <b-button type="submit" variant="primary">Actualizar</b-button>
-        </b-form>
       </b-container>
     </b-modal>
 
@@ -302,12 +310,12 @@
             </b-col>
           </b-row>
 
-          <b-button type="submit" variant="primary">Enviar</b-button>
+          <b-button type="submit" variant="primary">{{btnCustomer}}</b-button>
         </b-form>
       </b-container>
     </b-modal>
 
-    <b-modal id="modal-3" ref="modal-3" title="Nuevo vendedor" size="lg" hide-footer>
+    <b-modal id="modal-3" ref="modal-3" title="Vendedor" size="lg" hide-footer>
       <b-container fluid>
         <b-form @submit="saveSeller">
           <b-row class="my-3">
@@ -323,7 +331,7 @@
             </b-col>
           </b-row>
 
-          <b-button type="submit" variant="primary">Enviar</b-button>
+          <b-button type="submit" variant="primary">{{btnSeller}}</b-button>
         </b-form>
       </b-container>
     </b-modal>
@@ -557,6 +565,17 @@ export default {
         "Total",
         "Eliminar"
       ],
+      fieldsCustomer:[
+        "#",
+        { key: "name", label: "Nombre" },
+        { key: "description", label: "Descripción" },
+        "Editar"
+      ],
+      fieldsSeller:[
+        "#",
+        { key: "name", label: "Nombre" },
+        "Editar"
+      ],
       store: JSON.parse(this.storeData),
       fruitSlt: JSON.parse(this.fruitData),
       customerSlt: JSON.parse(this.customerData),
@@ -570,16 +589,22 @@ export default {
         quantityTom: null,
         quantityPrice: null,
         priceFirst: null,
-        priceSecond: null
+        priceSecond: null,
+        active:null
       },
+      fruitId: null,
       formFruit: {
         name: null,
         description: null
       },
+      btnCustomer: null,
+      customerId: null,
       formCustomer: {
         name: null,
         description: null
       },
+      sellerId: null,
+      btnSeller : null,
       formSeller: {
         name: null
       },
@@ -601,7 +626,7 @@ export default {
       total: 0,
       suggestedPrice: null,
       optionsCustomers: [{ value: null, text: "Seleccione a un cliente" }],
-      optionsFruitsCellar: [{ value: "", text: "Seleccione una fruta" }],
+      optionsFruitsCellar: [{ value: null, text: "Seleccione una fruta" }],
       optionsFruits: [{ value: null, text: "Seleccione una fruta" }],
       optionsSellers: [{ value: null, text: "Seleccione una vendedor" }],
       optionsDelivery: [
@@ -630,22 +655,24 @@ export default {
     }
 
     for (let index = 0; index < this.cellar.length; index++) {
-      this.optionsFruits.push({
-        value:
-          this.cellar[index].id +
-          "|" +
-          this.cellar[index].fruit.name +
-          " " +
-          this.cellar[index].created_at.split(" ")[0] +
-          " " +
-          this.cellar[index].id,
-        text:
-          this.cellar[index].fruit.name +
-          " " +
-          this.cellar[index].created_at.split(" ")[0] +
-          " " +
-          this.cellar[index].id
-      });
+      if(this.cellar[index].active == true){
+        this.optionsFruits.push({
+          value:
+            this.cellar[index].id +
+            "|" +
+            this.cellar[index].fruit.name +
+            " " +
+            this.cellar[index].created_at.split(" ")[0] +
+            " " +
+            this.cellar[index].id,
+          text:
+            this.cellar[index].fruit.name +
+            " " +
+            this.cellar[index].created_at.split(" ")[0] +
+            " " +
+            this.cellar[index].id
+        });
+      }
     }
 
     for (let index = 0; index < this.sellerSlt.length; index++) {
@@ -708,15 +735,26 @@ export default {
     saveFruit(evt) {
       evt.preventDefault();
       let me = this;
-      let url = "/createFruit";
+      var url = "/createFruit";
+      if(this.btnFruit == "Actualizar"){
+        url = "/updateFruit";
+      }
       axios.post(url, {
+          fruitId: this.idFruit,
           id: this.store.id,
           name: this.formFruit.name,
           description: this.formFruit.description
         })
         .then(function(response) {
           me.makeSuccessToast();
-          me.clearFruitFields();
+          me.fruitSlt = response.data.fruits;
+          me.optionsFruitsCellar= [{ value: null, text: "Seleccione una fruta" }];
+          for (let index = 0; index < me.fruitSlt.length; index++) {
+            me.optionsFruitsCellar.push({
+              value: me.fruitSlt[index].id,
+              text: me.fruitSlt[index].name
+            });
+          }
         })
         .catch(function(error) {
           console.log(error);
@@ -724,19 +762,81 @@ export default {
         });
       this.$refs["modal-1"].hide();
     },
+    openSaveSeller(){
+      this.btnSeller = "Guardar";
+      this.clearSellerFields();
+      this.$refs["modal-3"].show();
+    },
+    openEditSeller(idSeller){
+      this.btnSeller = "Actualizar";
+      this.sellerId = idSeller;
+      let me = this;
+      axios
+        .get("/editSeller", {
+          params: {
+            id: idSeller
+          }
+        })
+        .then(function(response) {
+          me.formSeller.name = response.data.seller.name;
+          me.$refs["modal-3"].show();
+        })
+        .catch(function(error) {
+          console.log(error);
+          me.makeErrorToast("");
+        });
+    },
+    openSaveCustomer(){
+      this.btnCustomer = "Guardar";
+      this.clearCustomerFields();
+      this.$refs["modal-2"].show();
+    },
+    openEditCustomer(idCustomer){
+      this.btnCustomer = "Actualizar";
+      this.clearCustomerFields();
+      this.customerId = idCustomer;
+      let me = this;
+      axios
+        .get("/editCustomer", {
+          params: {
+            id: idCustomer
+          }
+        })
+        .then(function(response) {
+          me.formCustomer.description = response.data.customer.description;
+          me.formCustomer.name = response.data.customer.name;
+          me.$refs["modal-2"].show();
+        })
+        .catch(function(error) {
+          console.log(error);
+          me.makeErrorToast("");
+        });
+  
+    },
     saveCustomer(evt) {
       evt.preventDefault();
       let me = this;
       let url = "/createCustomer";
+      if(this.btnCustomer == "Actualizar"){
+        url = "/updateCustomer";
+      }
       axios
         .post(url, {
+          customerId: this.customerId,
           id: this.store.id,
           name: this.formCustomer.name,
           description: this.formCustomer.description
         })
         .then(function(response) {
           me.makeSuccessToast();
-          me.clearCustomerFields();
+          me.customerSlt = response.data.customers;
+          me.optionsCustomers = [{ value: null, text: "Seleccione a un cliente" }];
+          for (let index = 0; index < me.customerSlt.length; index++) {
+            me.optionsCustomers.push({
+              value: me.customerSlt[index].id,
+              text: me.customerSlt[index].name
+            });
+          }
         })
         .catch(function(error) {
           console.log(error);
@@ -748,14 +848,30 @@ export default {
       evt.preventDefault();
       let me = this;
       let url = "/createSeller";
+      if(this.btnSeller == "Actualizar"){
+        url = "/updateSeller";
+      }
       axios
         .post(url, {
+          sellerId: this.sellerId,
           id: this.store.id,
           name: this.formSeller.name
         })
         .then(function(response) {
           me.makeSuccessToast();
-          me.clearSellerFields();
+          me.sellerSlt = response.data.sellers;
+          me.optionsSellers = [{ value: null, text: "Seleccione una vendedor" }];
+          me.optionsDelivery= [{ value: null, text: "Seleccione a la persona que entregó" }];
+          for (let index = 0; index < me.sellerSlt.length; index++) {
+            me.optionsSellers.push({
+              value: me.sellerSlt[index].id,
+              text: me.sellerSlt[index].name
+            });
+            me.optionsDelivery.push({
+              value: me.sellerSlt[index].id,
+              text: me.sellerSlt[index].name
+            });
+          }
         })
         .catch(function(error) {
           console.log(error);
@@ -780,10 +896,32 @@ export default {
           ton: this.formCellar.quantityTom,
           priceTon: this.formCellar.quantityPrice,
           first: this.formCellar.first,
-          second: this.formCellar.second
+          second: this.formCellar.second,
+          active: this.formCellar.active
         })
         .then(function(response) {
           me.cellar = response.data.cellars;
+          me.optionsFruits = [{ value: null, text: "Seleccione una fruta" }];
+          for (let index = 0; index < me.cellar.length; index++) {
+            if(me.cellar[index].active == true){
+              me.optionsFruits.push({
+                value:
+                  me.cellar[index].id +
+                  "|" +
+                  me.cellar[index].fruit.name +
+                  " " +
+                  me.cellar[index].created_at.split(" ")[0] +
+                  " " +
+                  me.cellar[index].id,
+                text:
+                  me.cellar[index].fruit.name +
+                  " " +
+                  me.cellar[index].created_at.split(" ")[0] +
+                  " " +
+                  me.cellar[index].id
+              });
+            }
+          }
           me.makeSuccessToast();
           me.clearSellerFields();
           me.$refs["modal-0"].hide();
@@ -821,6 +959,7 @@ export default {
             (me.formCellar.quantityPrice = response.data.cellar.price_ton),
             (me.formCellar.first = response.data.cellar.first),
             (me.formCellar.second = response.data.cellar.second),
+            (me.formCellar.active = response.data.cellar.active)
             me.$refs["modal-0"].show();
             let kg = me.formCellar.quantityTom * 1000;
             let price = me.formCellar.quantityPrice * me.formCellar.quantityTom;
@@ -860,9 +999,17 @@ export default {
         me.informationCellarSlt = "";
       }
     },
+    openSaveFruit() {
+      this.clearFruitFields();
+      this.btnFruit = "Guardar";
+      this.$refs["modal-1"].show();
+
+    },
     openEditFruit(idFruit) {
       let url = "/editFruit";
       let me = this;
+      this.btnFruit = "Actualizar";
+      this.idFruit = idFruit;
       axios
         .get(url, {
           params: {
@@ -872,7 +1019,7 @@ export default {
         .then(function(response) {
           me.formFruit.description = response.data.fruit.description;
           me.formFruit.name = response.data.fruit.name;
-          me.$refs["modal-edit-fruit"].show();
+          me.$refs["modal-1"].show();
         })
         .catch(function(error) {
           console.log(error);

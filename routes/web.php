@@ -31,15 +31,18 @@ Route::post('/updateFruit','FruitController@update');
 
 //Customer
 Route::post('/createCustomer', 'CustomerController@create');
+Route::post('/updateCustomer', 'CustomerController@update');
 
 //Seller
 Route::post('/createSeller','SellerController@create');
+Route::post('/updateSeller','SellerController@update');
 
 //Cellar
 Route::post('/createCellar','CellarController@create');
 Route::post('/updateCellar','CellarController@update');
 //Store
 Route::get('/stores', 'StoreController@index')->name('Tiendas');
+Route::get('/editStore', 'StoreController@edit');
 Route::post('/createStore', 'StoreController@create');
 Route::post('/updateStore', 'StoreController@update');
 
@@ -52,3 +55,5 @@ Route::get('editFruit', 'StoreDetailController@editFruit');
 Route::get('editCellar', 'StoreDetailController@editCellar');
 Route::get('getSales', 'StoreDetailController@getSales');
 Route ::get('editSale', 'StoreDetailController@editSale');
+Route ::get('editCustomer', 'StoreDetailController@editCustomer');
+Route ::get('editSeller', 'StoreDetailController@editSeller');

@@ -14,7 +14,24 @@ class CustomerController extends Controller
             'name' => $request->name,
             'description' => $request->description,
         ]);
+        $storeId = $request->id;
+        $customers = Customer::whereHas('store', function ($store) use($storeId){
+            $store->where('id', '=', $storeId);
+        })->orderBy('id', 'desc')->get();
 
-        return response()->json(['data' => true]);
+        return response()->json(['data' => true, 'customers' =>$customers]);
+    }
+
+    public function update(Request $request){
+
+        $customer = Customer::find($request->customerId);
+        $customer->name = $request->name;
+        $customer->description = $request->description;
+        $customer->save();
+        $storeId = $customer->store_id;
+        $customers = Customer::whereHas('store', function ($store) use($storeId){
+            $store->where('id', '=', $storeId);
+        })->orderBy('id', 'desc')->get();
+        return response()->json(['data' => true, 'customers' =>$customers]);
     }
 }

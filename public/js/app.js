@@ -2097,6 +2097,8 @@ __webpack_require__.r(__webpack_exports__);
     return {
       perPage: 10,
       currentPage: 1,
+      storeId: null,
+      btnStore: null,
       fields: ["#", {
         key: "name",
         label: "Nombre"
@@ -2105,8 +2107,8 @@ __webpack_require__.r(__webpack_exports__);
         label: "Dirección"
       }, "Editar"],
       stores: JSON.parse(this.storesArray),
-      name: "",
-      address: ""
+      name: null,
+      address: null
     };
   },
   mounted: function mounted() {},
@@ -2116,24 +2118,69 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   methods: {
+    makeErrorToast: function makeErrorToast(message) {
+      if (message == "") {
+        message = "Ocurrió un problema, intente de nuevo";
+      }
+
+      this.$bvToast.toast(message, {
+        title: "Error",
+        variant: "danger",
+        solid: true
+      });
+    },
+    makeSuccessToast: function makeSuccessToast() {
+      this.$bvToast.toast("Registro guardado correctamente", {
+        title: "\xC9xito",
+        variant: "success",
+        solid: true
+      });
+    },
     getstores: function getstores() {
       return this.stores = JSON.parse(this.storesArray);
     },
     saveFruit: function saveFruit() {
       var me = this;
       var url = "/createStore";
+
+      if (this.btnStore == "Actualizar") {
+        url = "/updateStore";
+      }
+
       axios.post(url, {
+        id: this.storeId,
         name: this.name,
         address: this.address
       }).then(function (response) {
-        me.clearFields();
+        me.stores = response.data.stores;
+        me.makeSuccessToast();
       })["catch"](function (error) {
         console.log(error);
       });
       this.$refs['modal-2'].hide();
     },
-    updateFruit: function updateFruit(id) {
-      console.log("hola: " + id);
+    openSaveFruit: function openSaveFruit() {
+      this.btnStore = "Guardar";
+      this.clearFields();
+      this.$refs['modal-2'].show();
+    },
+    openEditStore: function openEditStore(id) {
+      this.storeId = id;
+      this.btnStore = "Actualizar";
+      var me = this;
+      axios.get("/editStore", {
+        params: {
+          id: id
+        }
+      }).then(function (response) {
+        console.log(response);
+        me.name = response.data.store.name;
+        me.address = response.data.store.address;
+        me.$refs["modal-2"].show();
+      })["catch"](function (error) {
+        console.log(error);
+        me.makeErrorToast("");
+      });
     },
     clearFields: function clearFields() {
       this.name = "";
@@ -2153,6 +2200,14 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -2697,6 +2752,17 @@ __webpack_require__.r(__webpack_exports__);
         label: "Pagado"
       }, "Editar"],
       fieldsFruitsSale: ["Nombre", "Cantidad/kg", "Precio/kg", "Total", "Eliminar"],
+      fieldsCustomer: ["#", {
+        key: "name",
+        label: "Nombre"
+      }, {
+        key: "description",
+        label: "Descripción"
+      }, "Editar"],
+      fieldsSeller: ["#", {
+        key: "name",
+        label: "Nombre"
+      }, "Editar"],
       store: JSON.parse(this.storeData),
       fruitSlt: JSON.parse(this.fruitData),
       customerSlt: JSON.parse(this.customerData),
@@ -2710,16 +2776,22 @@ __webpack_require__.r(__webpack_exports__);
         quantityTom: null,
         quantityPrice: null,
         priceFirst: null,
-        priceSecond: null
+        priceSecond: null,
+        active: null
       },
+      fruitId: null,
       formFruit: {
         name: null,
         description: null
       },
+      btnCustomer: null,
+      customerId: null,
       formCustomer: {
         name: null,
         description: null
       },
+      sellerId: null,
+      btnSeller: null,
       formSeller: {
         name: null
       },
@@ -2745,7 +2817,7 @@ __webpack_require__.r(__webpack_exports__);
         text: "Seleccione a un cliente"
       }],
       optionsFruitsCellar: [{
-        value: "",
+        value: null,
         text: "Seleccione una fruta"
       }],
       optionsFruits: [{
@@ -2789,10 +2861,12 @@ __webpack_require__.r(__webpack_exports__);
     }
 
     for (var _index2 = 0; _index2 < this.cellar.length; _index2++) {
-      this.optionsFruits.push({
-        value: this.cellar[_index2].id + "|" + this.cellar[_index2].fruit.name + " " + this.cellar[_index2].created_at.split(" ")[0] + " " + this.cellar[_index2].id,
-        text: this.cellar[_index2].fruit.name + " " + this.cellar[_index2].created_at.split(" ")[0] + " " + this.cellar[_index2].id
-      });
+      if (this.cellar[_index2].active == true) {
+        this.optionsFruits.push({
+          value: this.cellar[_index2].id + "|" + this.cellar[_index2].fruit.name + " " + this.cellar[_index2].created_at.split(" ")[0] + " " + this.cellar[_index2].id,
+          text: this.cellar[_index2].fruit.name + " " + this.cellar[_index2].created_at.split(" ")[0] + " " + this.cellar[_index2].id
+        });
+      }
     }
 
     for (var _index3 = 0; _index3 < this.sellerSlt.length; _index3++) {
@@ -2854,30 +2928,108 @@ __webpack_require__.r(__webpack_exports__);
       evt.preventDefault();
       var me = this;
       var url = "/createFruit";
+
+      if (this.btnFruit == "Actualizar") {
+        url = "/updateFruit";
+      }
+
       axios.post(url, {
+        fruitId: this.idFruit,
         id: this.store.id,
         name: this.formFruit.name,
         description: this.formFruit.description
       }).then(function (response) {
         me.makeSuccessToast();
-        me.clearFruitFields();
+        me.fruitSlt = response.data.fruits;
+        me.optionsFruitsCellar = [{
+          value: null,
+          text: "Seleccione una fruta"
+        }];
+
+        for (var index = 0; index < me.fruitSlt.length; index++) {
+          me.optionsFruitsCellar.push({
+            value: me.fruitSlt[index].id,
+            text: me.fruitSlt[index].name
+          });
+        }
       })["catch"](function (error) {
         console.log(error);
         me.makeErrorToast("");
       });
       this.$refs["modal-1"].hide();
     },
+    openSaveSeller: function openSaveSeller() {
+      this.btnSeller = "Guardar";
+      this.clearSellerFields();
+      this.$refs["modal-3"].show();
+    },
+    openEditSeller: function openEditSeller(idSeller) {
+      this.btnSeller = "Actualizar";
+      this.sellerId = idSeller;
+      var me = this;
+      axios.get("/editSeller", {
+        params: {
+          id: idSeller
+        }
+      }).then(function (response) {
+        me.formSeller.name = response.data.seller.name;
+        me.$refs["modal-3"].show();
+      })["catch"](function (error) {
+        console.log(error);
+        me.makeErrorToast("");
+      });
+    },
+    openSaveCustomer: function openSaveCustomer() {
+      this.btnCustomer = "Guardar";
+      this.clearCustomerFields();
+      this.$refs["modal-2"].show();
+    },
+    openEditCustomer: function openEditCustomer(idCustomer) {
+      this.btnCustomer = "Actualizar";
+      this.clearCustomerFields();
+      this.customerId = idCustomer;
+      var me = this;
+      axios.get("/editCustomer", {
+        params: {
+          id: idCustomer
+        }
+      }).then(function (response) {
+        me.formCustomer.description = response.data.customer.description;
+        me.formCustomer.name = response.data.customer.name;
+        me.$refs["modal-2"].show();
+      })["catch"](function (error) {
+        console.log(error);
+        me.makeErrorToast("");
+      });
+    },
     saveCustomer: function saveCustomer(evt) {
       evt.preventDefault();
       var me = this;
       var url = "/createCustomer";
+
+      if (this.btnCustomer == "Actualizar") {
+        url = "/updateCustomer";
+      }
+
       axios.post(url, {
+        customerId: this.customerId,
         id: this.store.id,
         name: this.formCustomer.name,
         description: this.formCustomer.description
       }).then(function (response) {
         me.makeSuccessToast();
-        me.clearCustomerFields();
+        me.customerSlt = response.data.customers;
+        me.optionsCustomers = [{
+          value: null,
+          text: "Seleccione a un cliente"
+        }];
+
+        for (var index = 0; index < me.customerSlt.length; index++) {
+          me.optionsCustomers.push({
+            value: me.customerSlt[index].id,
+            text: me.customerSlt[index].name
+          });
+        }
       })["catch"](function (error) {
         console.log(error);
         me.makeErrorToast("");
@@ -2888,12 +3040,37 @@ __webpack_require__.r(__webpack_exports__);
       evt.preventDefault();
       var me = this;
       var url = "/createSeller";
+
+      if (this.btnSeller == "Actualizar") {
+        url = "/updateSeller";
+      }
+
       axios.post(url, {
+        sellerId: this.sellerId,
         id: this.store.id,
         name: this.formSeller.name
       }).then(function (response) {
         me.makeSuccessToast();
-        me.clearSellerFields();
+        me.sellerSlt = response.data.sellers;
+        me.optionsSellers = [{
+          value: null,
+          text: "Seleccione una vendedor"
+        }];
+        me.optionsDelivery = [{
+          value: null,
+          text: "Seleccione a la persona que entregó"
+        }];
+
+        for (var index = 0; index < me.sellerSlt.length; index++) {
+          me.optionsSellers.push({
+            value: me.sellerSlt[index].id,
+            text: me.sellerSlt[index].name
+          });
+          me.optionsDelivery.push({
+            value: me.sellerSlt[index].id,
+            text: me.sellerSlt[index].name
+          });
+        }
       })["catch"](function (error) {
         console.log(error);
         me.makeErrorToast("");
@@ -2918,9 +3095,24 @@ __webpack_require__.r(__webpack_exports__);
         ton: this.formCellar.quantityTom,
         priceTon: this.formCellar.quantityPrice,
         first: this.formCellar.first,
-        second: this.formCellar.second
+        second: this.formCellar.second,
+        active: this.formCellar.active
       }).then(function (response) {
         me.cellar = response.data.cellars;
+        me.optionsFruits = [{
+          value: null,
+          text: "Seleccione una fruta"
+        }];
+
+        for (var index = 0; index < me.cellar.length; index++) {
+          if (me.cellar[index].active == true) {
+            me.optionsFruits.push({
+              value: me.cellar[index].id + "|" + me.cellar[index].fruit.name + " " + me.cellar[index].created_at.split(" ")[0] + " " + me.cellar[index].id,
+              text: me.cellar[index].fruit.name + " " + me.cellar[index].created_at.split(" ")[0] + " " + me.cellar[index].id
+            });
+          }
+        }
+
         me.makeSuccessToast();
         me.clearSellerFields();
         me.$refs["modal-0"].hide();
@@ -2944,7 +3136,8 @@ __webpack_require__.r(__webpack_exports__);
         }
       }).then(function (response) {
         console.log(response.data.cellar.first);
-        me.formCellar.selectedFruitCellar = response.data.cellar.fruit_id, me.formCellar.quantityTom = response.data.cellar.ton, me.formCellar.quantityPrice = response.data.cellar.price_ton, me.formCellar.first = response.data.cellar.first, me.formCellar.second = response.data.cellar.second, me.$refs["modal-0"].show();
+        me.formCellar.selectedFruitCellar = response.data.cellar.fruit_id, me.formCellar.quantityTom = response.data.cellar.ton, me.formCellar.quantityPrice = response.data.cellar.price_ton, me.formCellar.first = response.data.cellar.first, me.formCellar.second = response.data.cellar.second, me.formCellar.active = response.data.cellar.active;
+        me.$refs["modal-0"].show();
         var kg = me.formCellar.quantityTom * 1000;
         var price = me.formCellar.quantityPrice * me.formCellar.quantityTom;
         me.suggestedPrice = price / kg;
@@ -2975,9 +3168,16 @@ __webpack_require__.r(__webpack_exports__);
         me.informationCellarSlt = "";
       }
     },
+    openSaveFruit: function openSaveFruit() {
+      this.clearFruitFields();
+      this.btnFruit = "Guardar";
+      this.$refs["modal-1"].show();
+    },
     openEditFruit: function openEditFruit(idFruit) {
       var url = "/editFruit";
       var me = this;
+      this.btnFruit = "Actualizar";
+      this.idFruit = idFruit;
       axios.get(url, {
         params: {
           id: idFruit
@@ -2985,7 +3185,7 @@ __webpack_require__.r(__webpack_exports__);
       }).then(function (response) {
         me.formFruit.description = response.data.fruit.description;
         me.formFruit.name = response.data.fruit.name;
-        me.$refs["modal-edit-fruit"].show();
+        me.$refs["modal-1"].show();
       })["catch"](function (error) {
         console.log(error);
         me.makeErrorToast("");
@@ -82275,14 +82475,12 @@ var render = function() {
                   _c(
                     "b-button",
                     {
-                      directives: [
-                        {
-                          name: "b-modal",
-                          rawName: "v-b-modal.modal-1",
-                          modifiers: { "modal-1": true }
+                      attrs: { block: "" },
+                      on: {
+                        click: function($event) {
+                          return _vm.openSaveFruit()
                         }
-                      ],
-                      attrs: { block: "" }
+                      }
                     },
                     [_vm._v("Agregar una nueva Bodega")]
                   )
@@ -82346,11 +82544,11 @@ var render = function() {
                             attrs: { variant: "primary" },
                             on: {
                               click: function($event) {
-                                return _vm.updateFruit(data.item.id)
+                                return _vm.openEditStore(data.item.id)
                               }
                             }
                           },
-                          [_vm._v("Editar " + _vm._s(data.item.id))]
+                          [_vm._v("Editar")]
                         )
                       ]
                     }
@@ -82370,7 +82568,7 @@ var render = function() {
           ref: "modal-2",
           attrs: {
             id: "modal-1",
-            title: "Nueva fruta",
+            title: "Bodega",
             size: "lg",
             "hide-footer": ""
           }
@@ -82396,7 +82594,7 @@ var render = function() {
                               id: "fruit-name",
                               "aria-describedby":
                                 "input-live-help input-live-feedback",
-                              placeholder: "Ingrese el nombre de la fruta",
+                              placeholder: "Ingrese el nombre de la bodega",
                               trim: ""
                             },
                             model: {
@@ -82427,7 +82625,7 @@ var render = function() {
                               id: "fruit-address",
                               "aria-describedby":
                                 "input-live-help input-live-feedback",
-                              placeholder: "Ingrese la descripción de la fruta",
+                              placeholder: "Ingrese la dirección de la bodega",
                               trim: ""
                             },
                             model: {
@@ -82455,7 +82653,7 @@ var render = function() {
                         }
                       }
                     },
-                    [_vm._v("Enviar")]
+                    [_vm._v(_vm._s(_vm.btnStore))]
                   )
                 ],
                 1
@@ -82526,36 +82724,6 @@ var render = function() {
               directives: [
                 {
                   name: "b-modal",
-                  rawName: "v-b-modal.modal-1",
-                  modifiers: { "modal-1": true }
-                }
-              ],
-              attrs: { variant: "primary" }
-            },
-            [_vm._v("Frutas")]
-          ),
-          _vm._v(" "),
-          _c(
-            "b-button",
-            {
-              directives: [
-                {
-                  name: "b-modal",
-                  rawName: "v-b-modal.modal-2",
-                  modifiers: { "modal-2": true }
-                }
-              ],
-              attrs: { variant: "primary" }
-            },
-            [_vm._v("Clientes")]
-          ),
-          _vm._v(" "),
-          _c(
-            "b-button",
-            {
-              directives: [
-                {
-                  name: "b-modal",
                   rawName: "v-b-modal.modal-3",
                   modifiers: { "modal-3": true }
                 }
@@ -82563,21 +82731,6 @@ var render = function() {
               attrs: { variant: "primary" }
             },
             [_vm._v("Vendedores")]
-          ),
-          _vm._v(" "),
-          _c(
-            "b-button",
-            {
-              directives: [
-                {
-                  name: "b-modal",
-                  rawName: "v-b-modal.modal-4",
-                  modifiers: { "modal-4": true }
-                }
-              ],
-              attrs: { variant: "primary" }
-            },
-            [_vm._v("Ventas")]
           )
         ],
         1
@@ -82592,109 +82745,7 @@ var render = function() {
             [
               _c(
                 "b-tab",
-                { attrs: { title: "Bodega", active: "" } },
-                [
-                  _c("h3", { staticClass: "text-center" }, [_vm._v("Bodega")]),
-                  _vm._v(" "),
-                  _c(
-                    "b-button",
-                    {
-                      staticClass: "mb-5 ml-5",
-                      attrs: { variant: "primary" },
-                      on: {
-                        click: function($event) {
-                          return _vm.openSaveCellar()
-                        }
-                      }
-                    },
-                    [_vm._v("Agregar")]
-                  ),
-                  _vm._v(" "),
-                  _c(
-                    "b-row",
-                    { staticClass: "mx-5", attrs: { "align-h": "center" } },
-                    [
-                      _c("b-table", {
-                        attrs: {
-                          striped: "",
-                          hover: "",
-                          fields: _vm.fieldsCellar,
-                          items: _vm.cellar,
-                          "per-page": _vm.perPage,
-                          "current-page": _vm.currentPage
-                        },
-                        scopedSlots: _vm._u([
-                          {
-                            key: "cell(#)",
-                            fn: function(data) {
-                              return [_vm._v(_vm._s(data.index + 1))]
-                            }
-                          },
-                          {
-                            key: "cell(Fruta)",
-                            fn: function(data) {
-                              return [_vm._v(_vm._s(data.item.fruit.name))]
-                            }
-                          },
-                          {
-                            key: "cell(priceton)",
-                            fn: function(data) {
-                              return [_vm._v(_vm._s(data.item.price_ton))]
-                            }
-                          },
-                          {
-                            key: "cell(Primera)",
-                            fn: function(data) {
-                              return [_vm._v("$" + _vm._s(data.item.first))]
-                            }
-                          },
-                          {
-                            key: "cell(Segunda)",
-                            fn: function(data) {
-                              return [_vm._v("$" + _vm._s(data.item.second))]
-                            }
-                          },
-                          {
-                            key: "cell(Activo)",
-                            fn: function(data) {
-                              return [
-                                data.item.active == 1
-                                  ? _c("span", [_vm._v("Disponible")])
-                                  : _c("span", [_vm._v("Terminado")])
-                              ]
-                            }
-                          },
-                          {
-                            key: "cell(Editar)",
-                            fn: function(data) {
-                              return [
-                                _c(
-                                  "b-button",
-                                  {
-                                    attrs: { variant: "primary" },
-                                    on: {
-                                      click: function($event) {
-                                        return _vm.openEditCellar(data.item.id)
-                                      }
-                                    }
-                                  },
-                                  [_vm._v("Editar")]
-                                )
-                              ]
-                            }
-                          }
-                        ])
-                      })
-                    ],
-                    1
-                  )
-                ],
-                1
-              ),
-              _vm._v(" "),
-              _c(
-                "b-tab",
-                { attrs: { title: "Ventas" } },
+                { attrs: { title: "Ventas", active: "" } },
                 [
                   _c("h3", { staticClass: "text-center" }, [_vm._v("Ventas")]),
                   _vm._v(" "),
@@ -82799,9 +82850,317 @@ var render = function() {
                 1
               ),
               _vm._v(" "),
-              _c("b-tab", { attrs: { title: "Frutas" } }, [
-                _c("p", [_vm._v("Frutas")])
-              ])
+              _c(
+                "b-tab",
+                { attrs: { title: "Bodega" } },
+                [
+                  _c("h3", { staticClass: "text-center" }, [_vm._v("Bodega")]),
+                  _vm._v(" "),
+                  _c(
+                    "b-button",
+                    {
+                      staticClass: "mb-5 ml-5",
+                      attrs: { variant: "primary" },
+                      on: {
+                        click: function($event) {
+                          return _vm.openSaveCellar()
+                        }
+                      }
+                    },
+                    [_vm._v("Agregar")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "b-row",
+                    { staticClass: "mx-5", attrs: { "align-h": "center" } },
+                    [
+                      _c("b-table", {
+                        attrs: {
+                          striped: "",
+                          hover: "",
+                          fields: _vm.fieldsCellar,
+                          items: _vm.cellar,
+                          "per-page": _vm.perPage,
+                          "current-page": _vm.currentPage
+                        },
+                        scopedSlots: _vm._u([
+                          {
+                            key: "cell(#)",
+                            fn: function(data) {
+                              return [_vm._v(_vm._s(data.index + 1))]
+                            }
+                          },
+                          {
+                            key: "cell(Fruta)",
+                            fn: function(data) {
+                              return [_vm._v(_vm._s(data.item.fruit.name))]
+                            }
+                          },
+                          {
+                            key: "cell(priceton)",
+                            fn: function(data) {
+                              return [_vm._v(_vm._s(data.item.price_ton))]
+                            }
+                          },
+                          {
+                            key: "cell(Primera)",
+                            fn: function(data) {
+                              return [_vm._v("$" + _vm._s(data.item.first))]
+                            }
+                          },
+                          {
+                            key: "cell(Segunda)",
+                            fn: function(data) {
+                              return [_vm._v("$" + _vm._s(data.item.second))]
+                            }
+                          },
+                          {
+                            key: "cell(Activo)",
+                            fn: function(data) {
+                              return [
+                                data.item.active == 1
+                                  ? _c("span", [_vm._v("Disponible")])
+                                  : _c("span", [_vm._v("Terminado")])
+                              ]
+                            }
+                          },
+                          {
+                            key: "cell(Editar)",
+                            fn: function(data) {
+                              return [
+                                _c(
+                                  "b-button",
+                                  {
+                                    attrs: { variant: "primary" },
+                                    on: {
+                                      click: function($event) {
+                                        return _vm.openEditCellar(data.item.id)
+                                      }
+                                    }
+                                  },
+                                  [_vm._v("Editar")]
+                                )
+                              ]
+                            }
+                          }
+                        ])
+                      })
+                    ],
+                    1
+                  )
+                ],
+                1
+              ),
+              _vm._v(" "),
+              _c(
+                "b-tab",
+                { attrs: { title: "Frutas" } },
+                [
+                  _c("h3", { staticClass: "text-center" }, [_vm._v("Frutas")]),
+                  _vm._v(" "),
+                  _c(
+                    "b-button",
+                    {
+                      staticClass: "mb-5 ml-5",
+                      attrs: { variant: "primary" },
+                      on: {
+                        click: function($event) {
+                          return _vm.openSaveFruit()
+                        }
+                      }
+                    },
+                    [_vm._v("Agregar")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "b-row",
+                    { staticClass: "mx-5", attrs: { "align-h": "center" } },
+                    [
+                      _c("b-table", {
+                        attrs: {
+                          striped: "",
+                          hover: "",
+                          fields: _vm.fields,
+                          items: _vm.fruitSlt,
+                          "per-page": _vm.perPage,
+                          "current-page": _vm.currentPage
+                        },
+                        scopedSlots: _vm._u([
+                          {
+                            key: "cell(#)",
+                            fn: function(data) {
+                              return [_vm._v(_vm._s(data.index + 1))]
+                            }
+                          },
+                          {
+                            key: "cell(Editar)",
+                            fn: function(data) {
+                              return [
+                                _c(
+                                  "b-button",
+                                  {
+                                    attrs: { variant: "primary" },
+                                    on: {
+                                      click: function($event) {
+                                        return _vm.openEditFruit(data.item.id)
+                                      }
+                                    }
+                                  },
+                                  [_vm._v("Editar")]
+                                )
+                              ]
+                            }
+                          }
+                        ])
+                      })
+                    ],
+                    1
+                  )
+                ],
+                1
+              ),
+              _vm._v(" "),
+              _c(
+                "b-tab",
+                { attrs: { title: "Clientes" } },
+                [
+                  _c("h3", { staticClass: "text-center" }, [
+                    _vm._v("Clientes")
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "b-button",
+                    {
+                      staticClass: "mb-5 ml-5",
+                      attrs: { variant: "primary" },
+                      on: {
+                        click: function($event) {
+                          return _vm.openSaveCustomer()
+                        }
+                      }
+                    },
+                    [_vm._v("Agregar")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "b-row",
+                    { staticClass: "mx-5", attrs: { "align-h": "center" } },
+                    [
+                      _c("b-table", {
+                        attrs: {
+                          striped: "",
+                          hover: "",
+                          fields: _vm.fieldsCustomer,
+                          items: _vm.customerSlt,
+                          "per-page": _vm.perPage,
+                          "current-page": _vm.currentPage
+                        },
+                        scopedSlots: _vm._u([
+                          {
+                            key: "cell(#)",
+                            fn: function(data) {
+                              return [_vm._v(_vm._s(data.index + 1))]
+                            }
+                          },
+                          {
+                            key: "cell(Editar)",
+                            fn: function(data) {
+                              return [
+                                _c(
+                                  "b-button",
+                                  {
+                                    attrs: { variant: "primary" },
+                                    on: {
+                                      click: function($event) {
+                                        return _vm.openEditCustomer(
+                                          data.item.id
+                                        )
+                                      }
+                                    }
+                                  },
+                                  [_vm._v("Editar")]
+                                )
+                              ]
+                            }
+                          }
+                        ])
+                      })
+                    ],
+                    1
+                  )
+                ],
+                1
+              ),
+              _vm._v(" "),
+              _c(
+                "b-tab",
+                { attrs: { title: "Vendedores" } },
+                [
+                  _c("h3", { staticClass: "text-center" }, [
+                    _vm._v("Vendedores")
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "b-button",
+                    {
+                      staticClass: "mb-5 ml-5",
+                      attrs: { variant: "primary" },
+                      on: {
+                        click: function($event) {
+                          return _vm.openSaveSeller()
+                        }
+                      }
+                    },
+                    [_vm._v("Agregar")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "b-row",
+                    { staticClass: "mx-5", attrs: { "align-h": "center" } },
+                    [
+                      _c("b-table", {
+                        attrs: {
+                          striped: "",
+                          hover: "",
+                          fields: _vm.fieldsSeller,
+                          items: _vm.sellerSlt,
+                          "per-page": _vm.perPage,
+                          "current-page": _vm.currentPage
+                        },
+                        scopedSlots: _vm._u([
+                          {
+                            key: "cell(#)",
+                            fn: function(data) {
+                              return [_vm._v(_vm._s(data.index + 1))]
+                            }
+                          },
+                          {
+                            key: "cell(Editar)",
+                            fn: function(data) {
+                              return [
+                                _c(
+                                  "b-button",
+                                  {
+                                    attrs: { variant: "primary" },
+                                    on: {
+                                      click: function($event) {
+                                        return _vm.openEditSeller(data.item.id)
+                                      }
+                                    }
+                                  },
+                                  [_vm._v("Editar")]
+                                )
+                              ]
+                            }
+                          }
+                        ])
+                      })
+                    ],
+                    1
+                  )
+                ],
+                1
+              )
             ],
             1
           )
@@ -83028,6 +83387,63 @@ var render = function() {
                     1
                   ),
                   _vm._v(" "),
+                  _vm.btnCellar == "Actualizar"
+                    ? _c(
+                        "b-row",
+                        { staticClass: "my-3" },
+                        [
+                          _c("b-col", { attrs: { sm: "4" } }, [
+                            _c("div", { staticClass: "mt-3" }, [
+                              _vm._v("Estatus:")
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c(
+                            "b-col",
+                            { attrs: { sm: "8" } },
+                            [
+                              _c(
+                                "b-form-select",
+                                {
+                                  staticClass: "mb-3",
+                                  attrs: { required: "" },
+                                  model: {
+                                    value: _vm.formCellar.active,
+                                    callback: function($$v) {
+                                      _vm.$set(_vm.formCellar, "active", $$v)
+                                    },
+                                    expression: "formCellar.active"
+                                  }
+                                },
+                                [
+                                  _c(
+                                    "b-form-select-option",
+                                    { attrs: { value: null } },
+                                    [_vm._v("Por favor selecciona un opción")]
+                                  ),
+                                  _vm._v(" "),
+                                  _c(
+                                    "b-form-select-option",
+                                    { attrs: { value: "1" } },
+                                    [_vm._v("Activo")]
+                                  ),
+                                  _vm._v(" "),
+                                  _c(
+                                    "b-form-select-option",
+                                    { attrs: { value: "2" } },
+                                    [_vm._v("Inactivo")]
+                                  )
+                                ],
+                                1
+                              )
+                            ],
+                            1
+                          )
+                        ],
+                        1
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
                   _c(
                     "b-row",
                     { attrs: { "align-h": "end" } },
@@ -83063,11 +83479,10 @@ var render = function() {
           ref: "modal-1",
           attrs: {
             id: "modal-1",
-            title: "Nueva fruta",
+            title: "Fruta",
             size: "lg",
             "hide-footer": ""
-          },
-          on: { hidden: _vm.clearFruitFields }
+          }
         },
         [
           _c(
@@ -83147,159 +83562,13 @@ var render = function() {
                   _c(
                     "b-button",
                     { attrs: { type: "submit", variant: "primary" } },
-                    [_vm._v("Guardar")]
+                    [_vm._v(_vm._s(_vm.btnFruit))]
                   )
                 ],
                 1
               ),
               _vm._v(" "),
-              _c("br"),
-              _vm._v(" "),
-              _c(
-                "b-row",
-                { staticClass: "mx-5", attrs: { "align-h": "center" } },
-                [
-                  _c("b-table", {
-                    attrs: {
-                      striped: "",
-                      hover: "",
-                      fields: _vm.fields,
-                      items: _vm.fruitSlt,
-                      "per-page": _vm.perPage,
-                      "current-page": _vm.currentPage
-                    },
-                    scopedSlots: _vm._u([
-                      {
-                        key: "cell(#)",
-                        fn: function(data) {
-                          return [_vm._v(_vm._s(data.index + 1))]
-                        }
-                      },
-                      {
-                        key: "cell(Editar)",
-                        fn: function(data) {
-                          return [
-                            _c(
-                              "b-button",
-                              {
-                                attrs: { variant: "primary" },
-                                on: {
-                                  click: function($event) {
-                                    return _vm.openEditFruit(data.item.id)
-                                  }
-                                }
-                              },
-                              [_vm._v("Editar")]
-                            )
-                          ]
-                        }
-                      }
-                    ])
-                  })
-                ],
-                1
-              )
-            ],
-            1
-          )
-        ],
-        1
-      ),
-      _vm._v(" "),
-      _c(
-        "b-modal",
-        {
-          ref: "modal-edit-fruit",
-          attrs: {
-            id: "modal-edit-fruit",
-            title: "Editar fruta",
-            size: "lg",
-            "hide-footer": ""
-          }
-        },
-        [
-          _c(
-            "b-container",
-            { attrs: { fluid: "" } },
-            [
-              _c(
-                "b-form",
-                { on: { submit: _vm.updateFruit } },
-                [
-                  _c(
-                    "b-row",
-                    { staticClass: "my-3" },
-                    [
-                      _c(
-                        "b-col",
-                        { attrs: { sm: "12" } },
-                        [
-                          _c("b-form-input", {
-                            attrs: {
-                              id: "fruit-name",
-                              type: "text",
-                              "aria-describedby":
-                                "input-live-help input-live-feedback",
-                              placeholder: "Ingrese el nombre de la fruta",
-                              trim: "",
-                              required: ""
-                            },
-                            model: {
-                              value: _vm.formFruit.name,
-                              callback: function($$v) {
-                                _vm.$set(_vm.formFruit, "name", $$v)
-                              },
-                              expression: "formFruit.name"
-                            }
-                          })
-                        ],
-                        1
-                      )
-                    ],
-                    1
-                  ),
-                  _vm._v(" "),
-                  _c(
-                    "b-row",
-                    { staticClass: "my-3" },
-                    [
-                      _c(
-                        "b-col",
-                        { attrs: { sm: "12" } },
-                        [
-                          _c("b-form-input", {
-                            attrs: {
-                              id: "fruit-description",
-                              type: "text",
-                              "aria-describedby":
-                                "input-live-help input-live-feedback",
-                              placeholder: "Ingrese la descripción de la fruta",
-                              trim: "",
-                              required: ""
-                            },
-                            model: {
-                              value: _vm.formFruit.description,
-                              callback: function($$v) {
-                                _vm.$set(_vm.formFruit, "description", $$v)
-                              },
-                              expression: "formFruit.description"
-                            }
-                          })
-                        ],
-                        1
-                      )
-                    ],
-                    1
-                  ),
-                  _vm._v(" "),
-                  _c(
-                    "b-button",
-                    { attrs: { type: "submit", variant: "primary" } },
-                    [_vm._v("Actualizar")]
-                  )
-                ],
-                1
-              )
+              _c("br")
             ],
             1
           )
@@ -83394,7 +83663,7 @@ var render = function() {
                   _c(
                     "b-button",
                     { attrs: { type: "submit", variant: "primary" } },
-                    [_vm._v("Enviar")]
+                    [_vm._v(_vm._s(_vm.btnCustomer))]
                   )
                 ],
                 1
@@ -83412,7 +83681,7 @@ var render = function() {
           ref: "modal-3",
           attrs: {
             id: "modal-3",
-            title: "Nuevo vendedor",
+            title: "Vendedor",
             size: "lg",
             "hide-footer": ""
           }
@@ -83461,7 +83730,7 @@ var render = function() {
                   _c(
                     "b-button",
                     { attrs: { type: "submit", variant: "primary" } },
-                    [_vm._v("Enviar")]
+                    [_vm._v(_vm._s(_vm.btnSeller))]
                   )
                 ],
                 1

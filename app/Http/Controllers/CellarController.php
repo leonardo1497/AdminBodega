@@ -30,6 +30,7 @@ class CellarController extends Controller
         $cellar = Cellar::find($request->id);
         $cellar->first = $request->first;
         $cellar->second = $request->second;
+        $cellar->active = $request->active;
         $cellar->save();
 
         $storeId = $cellar->store_id;

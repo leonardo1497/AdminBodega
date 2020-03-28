@@ -12,22 +12,22 @@ class Store extends Model
 
     public function fruits()
     {
-        return $this->hasMany('App\Fruit');
+        return $this->hasMany('App\Fruit')->orderBy('id', 'desc');
     }
 
     public function customers()
     {
-        return $this->hasMany('App\Customer');
+        return $this->hasMany('App\Customer')->orderBy('id', 'desc');
     }
 
     public function sellers()
     {
-        return $this->hasMany('App\Seller');
+        return $this->hasMany('App\Seller')->orderBy('id', 'desc');
     }
 
     public function cellars()
     {
-        return $this->hasMany('App\Cellar')->with('fruit');
+        return $this->hasMany('App\Cellar')->with('fruit')->orderBy('id', 'desc');
     }
 
     public function daysales()

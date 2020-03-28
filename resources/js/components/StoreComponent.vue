@@ -4,7 +4,7 @@
     <b-container fluid>
       <b-row align-h="center" class="my-5">
         <b-col cols="4">
-          <b-button block v-b-modal.modal-1>Agregar una nueva Bodega</b-button>
+          <b-button block @click="openSaveFruit()">Agregar una nueva Bodega</b-button>
         </b-col>
       </b-row>
 
@@ -26,12 +26,12 @@
           :current-page="currentPage"
         >
           <template v-slot:cell(#)="data">{{ data.index + 1 }}</template>
-          <template v-slot:cell(Editar)="data"> <b-button  variant="primary" @click="updateFruit(data.item.id)">Editar {{data.item.id}}</b-button></template>
+          <template v-slot:cell(Editar)="data"> <b-button  variant="primary" @click="openEditStore(data.item.id)">Editar</b-button></template>
         </b-table>
       </b-row>
     </b-container>
 
-    <b-modal id="modal-1" ref="modal-2" title="Nueva fruta" size="lg" hide-footer>
+    <b-modal id="modal-1" ref="modal-2" title="Bodega" size="lg" hide-footer>
       <b-container fluid>
         <b-form>
           <b-row class="my-3">
@@ -40,7 +40,7 @@
                 id="fruit-name"
                 v-model="name"
                 aria-describedby="input-live-help input-live-feedback"
-                placeholder="Ingrese el nombre de la fruta"
+                placeholder="Ingrese el nombre de la bodega"
                 trim
               ></b-form-input>
             </b-col>
@@ -52,13 +52,13 @@
                 id="fruit-address"
                 v-model="address"
                 aria-describedby="input-live-help input-live-feedback"
-                placeholder="Ingrese la descripción de la fruta"
+                placeholder="Ingrese la dirección de la bodega"
                 trim
               ></b-form-input>
             </b-col>
           </b-row>
 
-          <b-button @click="saveFruit()" variant="primary">Enviar</b-button>
+          <b-button @click="saveFruit()" variant="primary">{{btnStore}}</b-button>
         </b-form>
       </b-container>
     </b-modal>
@@ -72,6 +72,8 @@ export default {
     return {
       perPage: 10,
       currentPage: 1,
+      storeId: null,
+      btnStore: null,
       fields: [
         "#",
         { key: "name", label: "Nombre" },
@@ -79,8 +81,8 @@ export default {
         "Editar"
       ],
       stores: JSON.parse(this.storesArray),
-      name: "",
-      address: ""
+      name: null,
+      address: null
     };
   },
   mounted() {
@@ -91,27 +93,71 @@ export default {
     }
   },
   methods: {
+    makeErrorToast(message) {
+      if (message == "") {
+        message = "Ocurrió un problema, intente de nuevo";
+      }
+      this.$bvToast.toast(message, {
+        title: `Error`,
+        variant: "danger",
+        solid: true
+      });
+    },
+    makeSuccessToast() {
+      this.$bvToast.toast("Registro guardado correctamente", {
+        title: `Éxito`,
+        variant: "success",
+        solid: true
+      });
+    },
     getstores() {
       return (this.stores = JSON.parse(this.storesArray));
     },
     saveFruit() {
       let me = this;
       let url = "/createStore"; 
+      if(this.btnStore == "Actualizar"){
+        url = "/updateStore";
+      }
       axios.post(url, {
-
+          id: this.storeId,
           name: this.name,
           address: this.address
         })
         .then(function(response) {
-          me.clearFields(); 
+          me.stores = response.data.stores;
+          me.makeSuccessToast();
         })
         .catch(function(error) {
           console.log(error);
         });
         this.$refs['modal-2'].hide();
     },
-    updateFruit(id){
-      console.log("hola: "+id)
+    openSaveFruit(){
+      this.btnStore = "Guardar";
+      this.clearFields();
+      this.$refs['modal-2'].show();
+    },
+    openEditStore(id){
+      this.storeId = id;
+      this.btnStore = "Actualizar";
+      let me = this;
+      axios
+        .get("/editStore", {
+          params: {
+            id: id
+          }
+        })
+        .then(function(response) {
+          console.log(response)
+          me.name = response.data.store.name;
+          me.address = response.data.store.address;
+          me.$refs["modal-2"].show();
+        })
+        .catch(function(error) {
+          console.log(error);
+          me.makeErrorToast("");
+        });
     },
     clearFields() {
       this.name = "";

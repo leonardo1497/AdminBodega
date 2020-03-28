@@ -15,7 +15,7 @@ class CreateFruitsTable extends Migration
     {
         Schema::create('fruits', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('name')->unique();
+            $table->string('name');
             $table->text('description')->nullable();
             $table->integer('store_id')->unsigned();
             $table->foreign('store_id')->references('id')->on('stores');

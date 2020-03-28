@@ -18,11 +18,12 @@ class FruitController extends Controller
         $fruits = Fruit::whereHas('store', function ($store) use($storeId){
             $store->where('id', '=', $storeId);
         })->orderBy('id', 'desc')->get();
+        
         return response()->json(['data' => true,'fruits' => $fruits ]);
     }
 
     public function update(Request $request){
-        $fruit = Fruit::find($request->id);
+        $fruit = Fruit::find($request->fruitId);
         $fruit->name = $request->name;
         $fruit->description = $request->description;
         $fruit->save();

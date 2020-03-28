@@ -11,7 +11,7 @@ class StoreController extends Controller
 
     public function index()
     {
-        $stores = Store::All();
+        $stores = Store::orderBy('id','desc')->get();
         return view('store',['stores' => $stores]);
     }
 
@@ -21,18 +21,22 @@ class StoreController extends Controller
             'name' => $request->name,
             'address' => $request->address,
         ]);
-        //event(new StoreTable());
-        return response()->json(['data' => true]);
+        $stores = Store::orderBy('id','desc')->get();
+        return response()->json(['data' => true, 'stores'=>$stores]);
     }
 
+    public function edit(Request $request){
+
+        $store = Store::find($request->id);
+        return response()->json(['store' => $store]);
+    }
     public function update(Request $request){
 
         $store = Store::find($request->id);
         $store->name = $request->name;
         $store->address = $request->address;
         $store->save();
-
-        event(new StoreTable());
-        return response()->json(['data' => true]);
+        $stores = Store::orderBy('id','desc')->get();
+        return response()->json(['data' => true, 'stores'=>$stores]);
     }
 }

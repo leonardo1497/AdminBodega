@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Cellar;
+use App\Customer;
 use App\Fruit;
 use App\Sale;
+use App\Seller;
 use Illuminate\Http\Request;
 use App\Store;
 
@@ -39,5 +41,15 @@ class StoreDetailController extends Controller
         $sale = Sale::find($request->id);
 
         return response()->json(['sale' => $sale]);
+    }
+
+    public function editCustomer(Request $request){
+        $customer = Customer::find($request->id);
+        return response()->json(['customer' => $customer]);
+    }
+
+    public function editSeller(Request $request){
+        $seller = Seller::find($request->id);
+        return response()->json(['seller' => $seller]);
     }
 }
